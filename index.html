@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Master Admin Panel</title>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --danger: #ef4444;
+            --success: #10b981;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 30px 15px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 580px;
+            background: var(--card-bg);
+            padding: 28px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+            border: 1px solid #334155;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .header h2 {
+            margin: 0 0 6px 0;
+            font-size: 24px;
+            color: #60a5fa;
+            letter-spacing: -0.5px;
+        }
+        .header p {
+            margin: 0;
+            font-size: 13px;
+            color: var(--text-dim);
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-dim);
+        }
+        input, select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            background: #0f172a;
+            color: #fff;
+            box-sizing: border-box;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        input:focus, select:focus {
+            border-color: var(--accent);
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        button {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-generate {
+            background-color: #475569;
+            color: white;
+            flex: 1;
+        }
+        .btn-generate:hover {
+            background-color: #64748b;
+        }
+        .btn-save {
+            background-color: var(--accent);
+            color: white;
+            margin-top: 15px;
+            width: 100%;
+        }
+        .btn-save:hover {
+            background-color: var(--accent-hover);
+        }
+        .user-list {
+            margin-top: 35px;
+        }
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .list-header h3 {
+            margin: 0;
+            font-size: 16px;
+            color: #e2e8f0;
+        }
+        .user-item {
+            background: #0f172a;
+            padding: 14px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #334155;
+            border-left: 4px solid var(--accent);
+        }
+        .user-info div {
+            margin-bottom: 4px;
+            font-size: 13px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .badge-single {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .badge-unlimited {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .btn-sm {
+            padding: 6px 10px;
+            font-size: 11px;
+            border-radius: 6px;
+        }
+        .btn-reset {
+            background: #eab308;
+            color: #0f172a;
+        }
+        .btn-delete {
+            background: var(--danger);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>License Admin Panel</h2>
+        <p>Manage User Credentials & Device Authorization</p>
+    </div>
+
+    <div class="form-group">
+        <label>Username / Access Key</label>
+        <input type="text" id="username" placeholder="e.g. USER_8832">
+    </div>
+
+    <div class="form-group">
+        <label>Password / Token</label>
+        <input type="text" id="password" placeholder="e.g. 7X#k9A@1">
+    </div>
+
+    <div class="form-group">
+        <label>Device Access Restriction</label>
+        <select id="deviceType">
+            <option value="single">Single Device (Locks to 1 Phone)</option>
+            <option value="unlimited">Unlimited Devices (Multiple Logins)</option>
+        </select>
+    </div>
+
+    <div class="btn-group">
+        <button class="btn-generate" onclick="generateRandomCredentials()">Auto-Generate Credentials</button>
+    </div>
+
+    <button class="btn-save" onclick="saveToFirebase()">Save Credentials</button>
+
+    <div class="user-list">
+        <div class="list-header">
+            <h3>Active Licenses</h3>
+            <span id="userCount" style="font-size: 12px; color: var(--text-dim);">0 Keys</span>
+        </div>
+        <div id="usersContainer">Loading data...</div>
+    </div>
+</div>
+
+<script>
+    // Configuration from google-services.json
+    const firebaseConfig = {
+        apiKey: "AIzaSyAoBbTJkz8_lN_i31Jay2drSxM4LuaUbf4",
+        authDomain: "tttttt-a60f0.firebaseapp.com",
+        databaseURL: "https://tttttt-a60f0-default-rtdb.firebaseio.com",
+        projectId: "tttttt-a60f0",
+        storageBucket: "tttttt-a60f0.firebasestorage.app",
+        messagingSenderId: "247055737703",
+        appId: "1:247055737703:android:1b1dbd6aecbcbbad1305c2"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const dbRef = database.ref("FirebaseDB");
+
+    function generateRandomCredentials() {
+        const randomUser = "KEY_" + Math.random().toString(36).substring(2, 8).toUpperCase();
+        const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        let randomPass = "";
+        for (let i = 0; i < 8; i++) {
+            randomPass += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        document.getElementById("username").value = randomUser;
+        document.getElementById("password").value = randomPass;
+    }
+
+    function saveToFirebase() {
+        const user = document.getElementById("username").value.trim();
+        const pass = document.getElementById("password").value.trim();
+        const devType = document.getElementById("deviceType").value;
+
+        if (!user || !pass) {
+            alert("Please enter or generate both username and password!");
+            return;
+        }
+
+        const newEntry = {
+            input1: user,
+            input2: pass,
+            deviceType: devType,
+            registeredDevice: "none",
+            createdAt: new Date().toISOString()
+        };
+
+        dbRef.push(newEntry)
+            .then(() => {
+                alert("Credentials generated successfully!");
+                document.getElementById("username").value = "";
+                document.getElementById("password").value = "";
+            })
+            .catch((error) => {
+                alert("Error: " + error.message);
+            });
+    }
+
+    dbRef.on("value", (snapshot) => {
+        const container = document.getElementById("usersContainer");
+        const countSpan = document.getElementById("userCount");
+        container.innerHTML = "";
+
+        if (!snapshot.exists()) {
+            container.innerHTML = "<p style='color: var(--text-dim); text-align: center; font-size: 13px;'>No active keys found.</p>";
+            countSpan.innerText = "0 Keys";
+            return;
+        }
+
+        let total = 0;
+        snapshot.forEach((child) => {
+            total++;
+            const data = child.val();
+            const key = child.key;
+            const isSingle = (data.deviceType || "single") === "single";
+            const deviceStatus = (data.registeredDevice && data.registeredDevice !== "none") 
+                ? data.registeredDevice.substring(0, 10) + "..." 
+                : "Not Bound";
+
+            const div = document.createElement("div");
+            div.className = "user-item";
+            div.innerHTML = `
+                <div class="user-info">
+                    <div><strong>Key:</strong> ${data.input1 || "N/A"}</div>
+                    <div><strong>Pass:</strong> ${data.input2 || "N/A"}</div>
+                    <div style="margin-top: 5px;">
+                        <span class="badge ${isSingle ? 'badge-single' : 'badge-unlimited'}">
+                            ${isSingle ? '1 Device' : 'Unlimited'}
+                        </span>
+                        ${isSingle ? `<span style="font-size: 11px; color: var(--text-dim); margin-left: 6px;">[Device: ${deviceStatus}]</span>` : ''}
+                    </div>
+                </div>
+                <div class="actions">
+                    ${isSingle ? `<button class="btn-sm btn-reset" onclick="resetDevice('${key}')">Reset Device</button>` : ''}
+                    <button class="btn-sm btn-delete" onclick="deleteUser('${key}')">Delete</button>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+        countSpan.innerText = total + " Keys";
+    });
+
+    function resetDevice(key) {
+        if (confirm("Are you sure you want to unlock this device? The user can log in on a new device.")) {
+            dbRef.child(key).update({ registeredDevice: "none" });
+        }
+    }
+
+    function deleteUser(key) {
+        if (confirm("Are you sure you want to permanently delete this user?")) {
+            dbRef.child(key).remove();
+        }
+    }
+</script>
+
+</body>
+  </html>
+          
